@@ -27,7 +27,8 @@ func (Provider) CaddyModule() caddy.ModuleInfo {
 
 func (p *Provider) Provision(ctx caddy.Context) error {
 	replacer := caddy.NewReplacer()
-	p.Provider.ApiKey = replacer.ReplaceAll(p.Provider.ApiKey, "")
+	p.Provider.Secret = replacer.ReplaceAll(p.Provider.Secret, "")
+	p.Provider.Token = replacer.ReplaceAll(p.Provider.Token, "")
 	return nil
 }
 
@@ -39,9 +40,15 @@ func (p *Provider) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 
 		for nesting := d.Nesting(); d.NextBlock(nesting); {
 			switch d.Val() {
-			case "api_key":
+			case "api_secret":
 				if d.NextArg() {
-					p.Provider.ApiKey = d.Val()
+					p.Provider.Secret = d.Val()
+				} else {
+					return d.ArgErr()
+				}
+			case "api_token":
+				if d.NextArg() {
+					p.Provider.Token = d.Val()
 				} else {
 					return d.ArgErr()
 				}
