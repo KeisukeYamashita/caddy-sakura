@@ -1,4 +1,4 @@
-module github.com/KeisukeYamashita/caddy-xxx/provider
+module github.com/KeisukeYamashita/caddy-sakura/provider
 
 go 1.22.2
 

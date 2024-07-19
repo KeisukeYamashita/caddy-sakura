@@ -1,6 +1,6 @@
-module for Caddy
+# Sakura module for Caddy
 
-> Module contains a DNS provider for [Caddy](https://github.com/caddyserver/caddy).
+> [Sakura](https://cloud.sakura.ad.jp/) module contains a DNS provider for [Caddy](https://github.com/caddyserver/caddy).
 
 ## How to use
 
@@ -13,7 +13,7 @@ xcaddy build
 
 ## Configuration
 
-To use this module for ACME DNS challeng, configure the Caddy JSON as below:
+To use this module for ACME DNS challenge, configure the Caddy JSON as below:
 
 ```json
 {
@@ -38,3 +38,6 @@ tls {
 }
 ```
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

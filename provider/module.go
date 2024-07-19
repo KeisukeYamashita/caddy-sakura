@@ -1,7 +1,7 @@
-package xxx
+package sakura
 
 import (
-	xxx "github.com/KeisukeYamashita/caddy-xxx/libdns"
+	sakura "github.com/KeisukeYamashita/caddy-sakura/libdns"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
@@ -12,7 +12,7 @@ var (
 	_ caddy.Provisioner     = (*Provider)(nil)
 )
 
-type Provider struct{ *xxx.Provider }
+type Provider struct{ *sakura.Provider }
 
 func init() {
 	caddy.RegisterModule(Provider{})
@@ -20,16 +20,14 @@ func init() {
 
 func (Provider) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
-		ID:  "dns.providers.xxx",
-		New: func() caddy.Module { return &Provider{new(xxx.Provider)} },
+		ID:  "dns.providers.sakura",
+		New: func() caddy.Module { return &Provider{new(sakura.Provider)} },
 	}
 }
 
 func (p *Provider) Provision(ctx caddy.Context) error {
 	replacer := caddy.NewReplacer()
-	p.Provider.AuthId = replacer.ReplaceAll(p.Provider.AuthId, "")
-	p.Provider.SubAuthId = replacer.ReplaceAll(p.Provider.SubAuthId, "")
-	p.Provider.AuthPassword = replacer.ReplaceAll(p.Provider.AuthPassword, "")
+	p.Provider.ApiKey = replacer.ReplaceAll(p.Provider.ApiKey, "")
 	return nil
 }
 
@@ -38,36 +36,19 @@ func (p *Provider) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 		if d.NextArg() {
 			return d.ArgErr()
 		}
+
 		for nesting := d.Nesting(); d.NextBlock(nesting); {
 			switch d.Val() {
-			case "auth_id":
+			case "api_key":
 				if d.NextArg() {
-					p.Provider.AuthId = d.Val()
-				} else {
-					return d.ArgErr()
-				}
-			case "sub_auth_id":
-				if d.NextArg() {
-					p.Provider.SubAuthId = d.Val()
-				} else {
-					return d.ArgErr()
-				}
-			case "auth_password":
-				if d.NextArg() {
-					p.Provider.AuthPassword = d.Val()
+					p.Provider.ApiKey = d.Val()
 				} else {
 					return d.ArgErr()
 				}
 			default:
-				return d.Errf("unrecognized subdirective '%s'", d.Val())
+				return d.Errf("unrecognized sub directive '%s'", d.Val())
 			}
 		}
-	}
-	if p.Provider.AuthId == "" && p.Provider.SubAuthId == "" {
-		return d.Err("missing auth id or sub auth id")
-	}
-	if p.Provider.AuthPassword == "" {
-		return d.Err("missing auth password")
 	}
 	return nil
 }

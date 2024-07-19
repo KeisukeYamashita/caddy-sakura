@@ -2,8 +2,15 @@ package libdns
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/libdns/libdns"
+	"golang.org/x/exp/slices"
+
+	"github.com/sacloud/iaas-api-go"
+	"github.com/sacloud/iaas-api-go/types"
+	"github.com/sacloud/iaas-service-go/dns"
 )
 
 var (
@@ -14,52 +21,149 @@ var (
 )
 
 type Provider struct {
+	client *dns.Service
+
+	ApiKey string
 }
 
 func (p *Provider) AppendRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
-	var appendedRecords []libdns.Record
-
-	for _, record := range records {
-		newRecord, err := createRecord(ctx, p.AuthAPIToken, unFQDN(zone), record)
-		if err != nil {
-			return nil, err
-		}
-		appendedRecords = append(appendedRecords, newRecord)
+	d, err := p.client.ReadWithContext(ctx, &dns.ReadRequest{
+		ID: types.ZoneIs1aID,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	return appendedRecords, nil
+	rs := make(iaas.DNSRecords, len(d.Records))
+	for _, r := range d.Records {
+		records = append(records, libdns.Record{
+			ID:    fmt.Sprintf("%s_%s_%s", d.GetName(), r.GetName(), r.GetType()),
+			Name:  r.GetName(),
+			TTL:   time.Duration(r.GetTTL()),
+			Type:  r.GetType().String(),
+			Value: r.GetRData(),
+		})
+	}
+
+	d, err = p.client.UpdateWithContext(ctx, &dns.UpdateRequest{
+		ID:      types.ZoneIs1aID,
+		Records: rs,
+	})
+
+	newRecords := make([]libdns.Record, len(d.Records))
+	for _, r := range d.Records {
+		newRecords = append(newRecords, libdns.Record{
+			ID:    fmt.Sprintf("%s_%s_%s", d.GetName(), r.GetName(), r.GetType()),
+			Name:  r.GetName(),
+			TTL:   time.Duration(r.GetTTL()),
+			Type:  r.GetType().String(),
+			Value: r.GetRData(),
+		})
+	}
+
+	return newRecords, err
 }
 
 func (p *Provider) DeleteRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
-	for _, record := range records {
-		err := deleteRecord(ctx, unFQDN(zone), p.AuthAPIToken, record)
-		if err != nil {
-			return nil, err
+	d, err := p.client.ReadWithContext(ctx, &dns.ReadRequest{
+		ID: types.ZoneIs1aID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	rs := make([]libdns.Record, len(d.Records))
+	for _, r := range d.Records {
+		records = append(records, libdns.Record{
+			ID:    fmt.Sprintf("%s_%s_%s", d.GetName(), r.GetName(), r.GetType()),
+			Name:  r.GetName(),
+			TTL:   time.Duration(r.GetTTL()),
+			Type:  r.GetType().String(),
+			Value: r.GetRData(),
+		})
+	}
+
+	remaining := slices.DeleteFunc(rs, func(r libdns.Record) bool {
+		return true
+	})
+
+	newRecords := make(iaas.DNSRecords, len(remaining))
+	for i, r := range remaining {
+		newRecords[i] = &iaas.DNSRecord{
+			Name:  r.Name,
+			RData: r.Value,
+			Type:  types.EDNSRecordType(r.Type),
+			TTL:   int(r.TTL.Seconds()),
 		}
 	}
 
-	return records, nil
+	d, err = p.client.UpdateWithContext(ctx, &dns.UpdateRequest{
+		ID:      types.ZoneIs1aID,
+		Records: newRecords,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	rs = make([]libdns.Record, len(d.Records))
+	for _, r := range d.Records {
+		records = append(records, libdns.Record{
+			ID:    fmt.Sprintf("%s_%s_%s", d.GetName(), r.GetName(), r.GetType()),
+			Name:  r.GetName(),
+			TTL:   time.Duration(r.GetTTL()),
+			Type:  r.GetType().String(),
+			Value: r.GetRData(),
+		})
+	}
+
+	return rs, nil
+
 }
 
 func (p *Provider) GetRecords(ctx context.Context, zone string) ([]libdns.Record, error) {
-	records, err := getAllRecords(ctx, p.AuthAPIToken, unFQDN(zone))
+	d, err := p.client.ReadWithContext(ctx, &dns.ReadRequest{
+		ID: types.ZoneIs1aID,
+	})
 	if err != nil {
 		return nil, err
+	}
+
+	records := make([]libdns.Record, len(d.Records))
+	for _, r := range d.Records {
+		records = append(records, libdns.Record{
+			ID:    fmt.Sprintf("%s_%s_%s", d.GetName(), r.GetName(), r.GetType()),
+			Name:  r.GetName(),
+			TTL:   time.Duration(r.GetTTL()),
+			Type:  r.GetType().String(),
+			Value: r.GetRData(),
+		})
 	}
 
 	return records, nil
 }
 
 func (p *Provider) SetRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
-	var setRecords []libdns.Record
+	rs := make(iaas.DNSRecords, len(records))
 
 	for _, record := range records {
-		setRecord, err := createOrUpdateRecord(ctx, p.AuthAPIToken, unFQDN(zone), record)
-		if err != nil {
-			return setRecords, err
+		r := &iaas.DNSRecord{
+			Name:  record.Name,
+			RData: record.Value,
+			Type:  types.EDNSRecordType(record.Type),
+			TTL:   int(record.TTL.Seconds()),
 		}
-		setRecords = append(setRecords, setRecord)
+
+		rs = append(rs, r)
 	}
 
-	return setRecords, nil
+	_, err := p.client.UpdateWithContext(ctx, &dns.UpdateRequest{
+		ID:      types.ZoneIs1aID,
+		Records: rs,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
 }
