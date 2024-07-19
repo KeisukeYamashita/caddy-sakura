@@ -1,7 +1,7 @@
 package xxx
 
 import (
-	cloudns "github.com/anxuanzi/libdns-cloudns"
+	xxx "github.com/KeisukeYamashita/caddy-xxx/libdns"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
@@ -12,7 +12,7 @@ var (
 	_ caddy.Provisioner     = (*Provider)(nil)
 )
 
-type Provider struct{ *cloudns.Provider }
+type Provider struct{ *xxx.Provider }
 
 func init() {
 	caddy.RegisterModule(Provider{})
@@ -20,8 +20,8 @@ func init() {
 
 func (Provider) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
-		ID:  "dns.providers.cloudns",
-		New: func() caddy.Module { return &Provider{new(cloudns.Provider)} },
+		ID:  "dns.providers.xxx",
+		New: func() caddy.Module { return &Provider{new(xxx.Provider)} },
 	}
 }
 

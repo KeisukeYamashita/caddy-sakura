@@ -1,9 +1,8 @@
-module github.com/KeisukeYamashita/caddy-xxx
+module github.com/KeisukeYamashita/caddy-xxx/provider
 
 go 1.22.2
 
 require (
-	github.com/anxuanzi/libdns-cloudns v1.0.2
 	github.com/caddyserver/caddy/v2 v2.8.4
 )
 
