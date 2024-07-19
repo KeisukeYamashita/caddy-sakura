@@ -21,7 +21,9 @@ To use this module for ACME DNS challenge, configure the Caddy JSON as below:
   "challenges": {
     "dns": {
       "provider": {
-        "name": "xxx",
+        "name": "caddy",
+        "api_secret": "xxx", // optional
+        "api_token": "xxx"   // optional
       }
     }
   }
@@ -32,11 +34,17 @@ Or either you can use the Caddyfile:
 
 ```Caddyfile
 tls {
-  dns xxx {
-    xxx
+  dns sakura {
+    api_token  "xxx" // optional
+    api_secret "xxx" // optional
   }
 }
 ```
+
+> [!NOTE]
+> If you don't provide `api_token` and `api_secret`, the module will try to read them from the environment variables `SAKURACLOUD_ACCESS_TOKEN` and `SAKURACLOUD_ACCESS_TOKEN_SECRET`.
+>
+> Note that the environment variables have low priority than the Caddyfile configuration.
 
 ## License
 

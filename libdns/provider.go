@@ -3,6 +3,7 @@ package libdns
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/libdns/libdns"
@@ -23,10 +24,31 @@ var (
 type Provider struct {
 	client *dns.Service
 
-	ApiKey string
+	// API key for Sakura cloud API.
+	Secret string `json:"secret,omitempty"`
+
+	// API token for Sakura cloud API.
+	Token string `json:"token,omitempty"`
+}
+
+func (p *Provider) init(_ context.Context) {
+	if p.client == nil {
+		if p.Secret == "" {
+			p.Secret = os.Getenv(iaas.APIAccessSecretEnvKey)
+		}
+
+		if p.Token == "" {
+			p.Token = os.Getenv(iaas.APIAccessTokenEnvKey)
+		}
+
+		p.client = dns.New(iaas.NewClient(p.Token, p.Secret))
+		return
+	}
 }
 
 func (p *Provider) AppendRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
+	p.init(ctx)
+
 	d, err := p.client.ReadWithContext(ctx, &dns.ReadRequest{
 		ID: types.ZoneIs1aID,
 	})
@@ -65,6 +87,8 @@ func (p *Provider) AppendRecords(ctx context.Context, zone string, records []lib
 }
 
 func (p *Provider) DeleteRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
+	p.init(ctx)
+
 	d, err := p.client.ReadWithContext(ctx, &dns.ReadRequest{
 		ID: types.ZoneIs1aID,
 	})
@@ -121,6 +145,8 @@ func (p *Provider) DeleteRecords(ctx context.Context, zone string, records []lib
 }
 
 func (p *Provider) GetRecords(ctx context.Context, zone string) ([]libdns.Record, error) {
+	p.init(ctx)
+
 	d, err := p.client.ReadWithContext(ctx, &dns.ReadRequest{
 		ID: types.ZoneIs1aID,
 	})
@@ -143,6 +169,8 @@ func (p *Provider) GetRecords(ctx context.Context, zone string) ([]libdns.Record
 }
 
 func (p *Provider) SetRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
+	p.init(ctx)
+
 	rs := make(iaas.DNSRecords, len(records))
 
 	for _, record := range records {
