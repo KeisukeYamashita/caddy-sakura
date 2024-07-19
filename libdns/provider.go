@@ -49,6 +49,7 @@ func (p *Provider) init(_ context.Context) {
 func (p *Provider) AppendRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
 	p.init(ctx)
 
+	// Refactor the common codes.
 	d, err := p.client.ReadWithContext(ctx, &dns.ReadRequest{
 		ID: types.ZoneIs1aID,
 	})
