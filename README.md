@@ -8,7 +8,7 @@ Build your Caddy image containing this module:
 
 ```console
 xcaddy build
-    --with github.com/KeisukeYamashita/caddy-xxx
+    --with github.com/KeisukeYamashita/caddy-sakura/provider
 ```
 
 ## Configuration
