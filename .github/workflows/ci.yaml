@@ -16,7 +16,7 @@ jobs:
       contents: read # To checkout
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-go@v5
 
@@ -30,7 +30,7 @@ jobs:
       contents: read # To checkout
       pull-requests: write # To comment to PRs
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: reviewdog/action-markdownlint@v0
         with:
